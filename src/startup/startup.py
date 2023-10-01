@@ -2,10 +2,13 @@ import logging
 import sys 
 import importlib
 
-logging.info('mediaplayer.src.startup.py: begining startup procedures')
+logging.info('MPAR.src.startup.py: initialising startup procedures')
 
-# This loads our project into the path variable
-sys.path.append('C:/Users/Julian/projects/python/mediaPlayer')
+# Set icons for undo and redo buttons
+selfLocation = __file__
+iconLocation = selfLocation.replace('\src\startup\startup.py','')
+
+sys.path.append(iconLocation)
 
 import src.ui.ui as ui
 # Launch our ui

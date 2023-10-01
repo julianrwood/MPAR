@@ -75,9 +75,12 @@ class AnnotationWidget(QWidget):
         self.redoButton = QPushButton()
 
         # Set icons for undo and redo buttons
-        self.clearButton.setIcon(QIcon("C:/Users/Julian/projects/python/mediaPlayer/src/ui/icons/clear.png"))  # Replace with your clear icon file
-        self.undoButton.setIcon(QIcon("C:/Users/Julian/projects/python/mediaPlayer/src/ui/icons/undo.png"))    # Replace with your undo icon file
-        self.redoButton.setIcon(QIcon("C:/Users/Julian/projects/python/mediaPlayer/src/ui/icons/redo.png"))    # Replace with your redo icon file
+        selfLocation = __file__
+        iconLocation = selfLocation.replace('annotations.py','icons')
+
+        self.clearButton.setIcon(QIcon(iconLocation+"/clear.png"))
+        self.undoButton.setIcon(QIcon(iconLocation+"/undo.png"))
+        self.redoButton.setIcon(QIcon(iconLocation+"/redo.png"))
 
         # hook in the annotation buttons
         self.clearButton.clicked.connect(self.clear)
