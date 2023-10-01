@@ -2,7 +2,11 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
 from PyQt5.QtCore import Qt, QPoint, QRectF
+
 import src.ui.widgets.annotationDrawings as annotationDrawings
+
+# Importing self utility classes
+import src.utilities.imageClass as SIC
 
 class PaintCanvasItem(QGraphicsItem):
     def __init__(self, paintCanvas):
@@ -54,8 +58,11 @@ class ImageView(QGraphicsView):
     def dropEvent(self, event):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
+
+            selfImage = SIC.SingleImageClass(file_path)
+
             # Load the dropped image using the file_path
-            self.MediaViewer.loadImage(file_path)
+            self.MediaViewer.loadImage(selfImage.getFilepath())
 
     def setViewedItem(self, pixmap):
         self.viewedItem = pixmap

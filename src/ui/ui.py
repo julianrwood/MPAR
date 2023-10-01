@@ -5,11 +5,15 @@ from PyQt5.QtCore import Qt, QRectF, pyqtSlot
 
 import qdarkgraystyle
 
+# Importing the ui elements
 import src.ui.imageViewer as imageViewer
 import src.ui.annotations as imageAnnotations
 import src.ui.widgets.annotationDrawings as annotationDrawings
 import src.ui.tools as tools
 import src.ui.timeline as timeline
+
+# Importing self utility classes
+import src.utilities.imageClass as SIC
 
 class MediaViewer(QMainWindow):
     def __init__(self):
@@ -62,7 +66,8 @@ class MediaViewer(QMainWindow):
             file_path = url.toLocalFile()
             print("Dropped file path:", file_path)
             # Load the dropped image using the file_path
-            self.view.loadImage(file_path)
+            selfImage = SIC(file_path)
+            self.view.loadImage(selfImage.getFilepath())
 
     def loadAndDisplayImage(self, file_path):
         pixmap = QPixmap(file_path)
