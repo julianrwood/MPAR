@@ -1,12 +1,12 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem
-from PyQt5.QtGui import QPixmap, QPainter, QColor, QPen
+from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QPen
 from PyQt5.QtCore import Qt, QPoint, QRectF
 
 import src.ui.widgets.annotationDrawings as annotationDrawings
 
 # Importing self utility classes
-import src.utilities.imageClass as SIC
+import src.utilities.imageClass as MPARUtils_SIC
 
 class PaintCanvasItem(QGraphicsItem):
     def __init__(self, paintCanvas):
@@ -21,7 +21,7 @@ class PaintCanvasItem(QGraphicsItem):
         self.paintCanvas.paintEvent(None)
 
 class ImageView(QGraphicsView):
-    def __init__(self, MediaViewer):
+    def __init__(self, MediaViewer, sourcesWindow):
         super().__init__()
         self.setRenderHint(QPainter.SmoothPixmapTransform)
         self.setInteractive(True)
@@ -34,6 +34,7 @@ class ImageView(QGraphicsView):
         self.viewedItem = None
         self.altPressed = False
 
+        self.sourcesWindow = sourcesWindow
         self.MediaViewer = MediaViewer
         self.toolType = 'Select'  # Default tool is 'Select'
 
@@ -51,6 +52,12 @@ class ImageView(QGraphicsView):
         
         self.setAcceptDrops(True)
 
+        # Create a QGraphicsScene to manage the items in the view
+        #ToDo: Eventually each iamge will have a QGraphics scene as apart of the iamge class. This is what would be in the sources 
+        # tab
+        self.scene = QGraphicsScene(self)
+        self.setScene(self.scene)
+
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
@@ -59,13 +66,10 @@ class ImageView(QGraphicsView):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
 
-            selfImage = SIC.SingleImageClass(file_path)
+            selfImage = MPARUtils_SIC.SingleImageClass(file_path)
 
             # Load the dropped image using the file_path
-            self.MediaViewer.loadImage(selfImage.getFilepath())
-
-    def setViewedItem(self, pixmap):
-        self.viewedItem = pixmap
+            self.loadImage(selfImage)
 
     def wheelEvent(self, event):
         zoomInFactor = 1.25
@@ -116,10 +120,6 @@ class ImageView(QGraphicsView):
         else:
             super().mouseReleaseEvent(event)
 
-    def frameViewedItem(self):
-        self.fitInView(self.viewedItem, Qt.KeepAspectRatio)
-        self.centerOn(self.viewedItem)
-
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_F:  # Check if the 'f' key is pressed
             if self.viewedItem is not None:
@@ -153,3 +153,29 @@ class ImageView(QGraphicsView):
             self.decideVisible()
         else:
             return None
+
+    def loadImage(self, imageClass):
+        # Set the background as the sceneRect
+        self.setSceneRect(imageClass.getBackground().sceneBoundingRect())
+        self.setViewedItem(imageClass)
+        # Add the image to the sources window
+        self.sourcesWindow.addFileChild(imageClass)
+
+    def setViewedItem(self, imageClass):
+        self.viewedItem = imageClass
+        self.setScene(imageClass.getGraphicsScene())
+        self.frameViewedItem()
+
+    def frameViewedItem(self):
+        self.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
+        self.centerOn(self.viewedItem.getPixmapItem())
+
+    def loadAndDisplayImage(self, file_path):
+        pixmap = QPixmap(file_path)
+        pixmap_item = QGraphicsPixmapItem(pixmap)
+        # Remove any previous items from the scene
+        self.scene.clear()
+        # Add the new image to the scene
+        self.scene.addItem(pixmap_item)
+        # Set the view to fit the image
+        self.fitInView(pixmap_item, Qt.KeepAspectRatio)

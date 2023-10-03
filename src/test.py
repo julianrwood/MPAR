@@ -1,49 +1,38 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QAction, QFileDialog
-from PyQt5.QtGui import QPainter, QColor, QPen, QPixmap
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
+from PyQt5.QtGui import QPixmap, QImage
+import imageio
+import numpy as np
 
+class EXRViewer(QMainWindow):
+    def __init__(self, exr_filename):
+        super().__init__()
+        self.setWindowTitle("EXR Viewer")
 
-class PaintCanvas(QWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.parent = parent
-        self.initUI()
-        self.drawing = False
-        self.lastPoint = None
-        self.strokes = []
+        # Load EXR Image
+        exr_data = imageio.imread(exr_filename)
+        q_img = self.numpy_array_to_qpixmap(exr_data)
 
-    def initUI(self):
-        self.setGeometry(0, 0, self.parent.width(), self.parent.height())
-        self.setAutoFillBackground(True)
-        self.setBackgroundRole(self.palette().Window)
-        self.setStyleSheet("background-color: white;")
+        # Create QLabel to display the image
+        label = QLabel()
+        label.setPixmap(q_img)
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        pen = QPen(QColor(0, 0, 0), 50, Qt.SolidLine)
-        painter.setPen(pen)
+        # Set up the main layout
+        central_widget = QWidget()
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        central_widget.setLayout(layout)
+        self.setCentralWidget(central_widget)
 
-        for stroke in self.strokes:
-            painter.drawPolyline(stroke)
+    def numpy_array_to_qpixmap(self, arr):
+        height, width, channel = arr.shape
+        bytes_per_line = 3 * width
+        q_img = QPixmap.fromImage(QImage(arr.data, width, height, bytes_per_line, QImage.Format_RGB888))
+        return q_img
 
-        if self.drawing and self.lastPoint:
-            painter.drawLine(self.lastPoint, self.currentPoint)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = True
-            self.lastPoint = event.pos()
-            self.strokes.append([self.lastPoint])
-
-    def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) and self.drawing:
-            self.currentPoint = event.pos()
-            self.strokes[-1].append(self.currentPoint)
-            self.update()
-            self.lastPoint = self.currentPoint
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = False
-            self.lastPoint = None
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    exr_file_path = 'C:/Users/Julian/projects/hamish/blender/output/v001/room_1_v001_####.exr'
+    viewer = EXRViewer(exr_file_path)
+    viewer.show()
+    sys.exit(app.exec_())

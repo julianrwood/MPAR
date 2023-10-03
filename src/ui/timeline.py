@@ -49,7 +49,7 @@ class QTimeLine(QWidget):
 
         # Draw slider
         slider_width = 10
-        slider_height = self.height() - 20
+        slider_height = self.height()
         slider_x = int(self.slider_position - slider_width / 2)  # Convert to integer
         painter.setBrush(QColor(255, 165, 0))  # Orange color for the slider
         painter.drawRect(slider_x, 10, slider_width, slider_height)
