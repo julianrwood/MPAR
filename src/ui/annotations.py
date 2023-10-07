@@ -9,8 +9,12 @@ class AnnotationWidget(QWidget):
     undoSignal = pyqtSignal()
     redoSignal = pyqtSignal()
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, mainUI):
+        super().__init__(mainUI)
+        # This helps us interact with otherwidgets. 
+        # We should probably have a utility class that stores the classes for external 
+        self.mainUI = mainUI
+
         self.setWindowTitle('Annotations')
         self.setMaximumHeight(300)
         #self.setSize(300, 300)

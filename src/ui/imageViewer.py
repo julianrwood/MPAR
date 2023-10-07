@@ -7,18 +7,7 @@ import src.ui.widgets.annotationDrawings as annotationDrawings
 
 # Importing self utility classes
 import src.utilities.imageClass as MPARUtils_SIC
-
-class PaintCanvasItem(QGraphicsItem):
-    def __init__(self, paintCanvas):
-        super().__init__()
-        self.paintCanvas = paintCanvas
-
-    def boundingRect(self):
-        return QRectF(self.paintCanvas.rect())  # Create a QRectF from the QRect
-
-    def paint(self, painter, option, widget):
-        # Forward the paint call to the PaintCanvas
-        self.paintCanvas.paintEvent(None)
+import src.utilities.paintItem as MPARUtils_PI
 
 class ImageView(QGraphicsView):
     def __init__(self, MediaViewer, sourcesWindow):
@@ -43,8 +32,11 @@ class ImageView(QGraphicsView):
         self.setScene(self.scene)
         
         # Create an instance of PaintCanvas and its associated QGraphicsItem
+        # ToDo: These need to be associated with the relevent ImageClass. We 
+        # can then reset them once we decide on which image we have loaded, 
+        # They'll need to be loaded on a per frame basis as well
         self.annotationDrawings = annotationDrawings.PaintCanvas(self, self.MediaViewer.annotationDockWidget)
-        self.annotationDrawingsItem = PaintCanvasItem(self.annotationDrawings)
+        self.annotationDrawingsItem = MPARUtils_PI.PaintCanvasItem(self.annotationDrawings)
         
         # Add the QGraphicsItem to the scene with a higher Z-value
         self.scene.addItem(self.annotationDrawingsItem)
@@ -52,9 +44,6 @@ class ImageView(QGraphicsView):
         
         self.setAcceptDrops(True)
 
-        # Create a QGraphicsScene to manage the items in the view
-        #ToDo: Eventually each iamge will have a QGraphics scene as apart of the iamge class. This is what would be in the sources 
-        # tab
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
 
@@ -66,7 +55,7 @@ class ImageView(QGraphicsView):
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
 
-            selfImage = MPARUtils_SIC.SingleImageClass(file_path)
+            selfImage = MPARUtils_SIC.SingleImageClass(file_path, self.MediaViewer)
 
             # Load the dropped image using the file_path
             self.loadImage(selfImage)
@@ -154,6 +143,9 @@ class ImageView(QGraphicsView):
         else:
             return None
 
+    def getToolType(self):
+        return self.toolType
+        
     def loadImage(self, imageClass):
         # Set the background as the sceneRect
         self.setSceneRect(imageClass.getBackground().sceneBoundingRect())
@@ -162,9 +154,19 @@ class ImageView(QGraphicsView):
         self.sourcesWindow.addFileChild(imageClass)
 
     def setViewedItem(self, imageClass):
+        self.deactivateCurrentAnnotations()
         self.viewedItem = imageClass
         self.setScene(imageClass.getGraphicsScene())
+        self.setAnnotations(imageClass)
         self.frameViewedItem()
+
+    def deactivateAnnoations():
+        self.annotationDrawings.setActive(False)
+        
+    def setAnnotations(self, imageClass):
+        self.annotationDrawings = imageClass.getAnnoationDrawings()
+        self.annotationDrawingsItem = imageClass.annotationDrawingsItem(self.annotationDrawings)
+        self.annotationDrawings.setActive(True)
 
     def frameViewedItem(self):
         self.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)

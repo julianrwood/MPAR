@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt, QPoint
 class PaintCanvas(QWidget):
     def __init__(self, parent, annotationWindow):
         super().__init__(parent)
+        self.active = False
         self.parent = parent
         self.annotationsWindow = annotationWindow
         
@@ -51,53 +52,91 @@ class PaintCanvas(QWidget):
             painter.drawLine(self.lastPoint, self.currentPoint)
     
     def clearDrawings(self):
-        self.strokes = []
-        self.update()
+        if self.active:
+            self.strokes = []
+            self.update()
     
     def undoPrevious(self):
-        if self.strokes == []:
-            return
-        
-        self.deletedStrokes.append(self.strokes[-1])
-        self.strokes.pop()
-        self.update()
+        if self.active:
+            if self.strokes == []:
+                return
+            
+            self.deletedStrokes.append(self.strokes[-1])
+            self.strokes.pop()
+            self.update()
 
     def redo(self):
-        if self.deletedStrokes == []:
-            return
-        
-        self.strokes.append(self.deletedStrokes[-1])
-        self.deletedStrokes.pop()
-        self.update()
+        if self.active:
+            if self.deletedStrokes == []:
+                return
+            
+            self.strokes.append(self.deletedStrokes[-1])
+            self.deletedStrokes.pop()
+            self.update()
 
     def mouseMoveEvent(self, event):
-        if (event.buttons() & Qt.LeftButton) and self.drawing:
-            self.currentPoint = event.pos()
-            stroke = self.strokes[-1][0]
-            stroke.append(self.currentPoint)  # Append the point to the current stroke
-            self.update()
-            self.lastPoint = self.currentPoint
+        if self.active:
+            if (event.buttons() & Qt.LeftButton) and self.drawing:
+                self.currentPoint = event.pos()
+                stroke = self.strokes[-1][0]
+                stroke.append(self.currentPoint)  # Append the point to the current stroke
+                self.update()
+                self.lastPoint = self.currentPoint
 
-        if self.panning:
-            if self.lastDragPosition:
+            if self.panning:
+                if self.lastDragPosition:
+                    delta = event.pos() - self.lastDragPosition
+                    self.parent.horizontalScrollBar().setValue(self.parent.horizontalScrollBar().value() - delta.x())
+                    self.parent.verticalScrollBar().setValue(self.parent.verticalScrollBar().value() - delta.y())
+
+                    # Update the position of the annotations by adding the delta
+                    for stroke, _ in self.strokes:
+                        for point in stroke:
+                            point.setX(int(point.x() + delta.x()))
+                            point.setY(int(point.y() + delta.y()))
+
+                    self.lastDragPosition = event.pos()
+                else:
+                    self.lastDragPosition = event.pos()  # Track the initial position
+
+            elif self.zooming:
+                if self.lastDragPosition:
+                    delta = event.pos() - self.lastDragPosition
+                    zoomFactor = 1.0 + delta.x() / 100.0  # Adjust the factor as needed
+
+                    # Calculate the center point for zooming (center of the widget)
+                    center = self.parent.viewport().rect().center()
+                    # Get the current transformation matrix for the view
+                    viewTransform = self.parent.transform()
+                    # Scale the view's transformation matrix
+                    viewTransform.scale(zoomFactor, zoomFactor)
+                    # Translate the view's transformation matrix to the center point
+                    viewTransform.translate(center.x() * (1 - zoomFactor), center.y() * (1 - zoomFactor))
+                    # Set the new transformation matrix for the view
+                    self.parent.setTransform(viewTransform)
+
+                    # Calculate the center point for zooming (center of the widget)
+                    center = self.parent.viewport().rect().center()
+
+                    # Scale the annotations by the same factor
+                    for stroke, _ in self.strokes:
+                        for point in stroke:
+                            scaledX = int((point.x() - center.x()) * zoomFactor + center.x())
+                            scaledY = int((point.y() - center.y()) * zoomFactor + center.y())
+                            point.setX(scaledX)
+                            point.setY(scaledY)
+
+                    self.lastDragPosition = event.pos()
+                else:
+                    self.lastDragPosition = event.pos()
+
+            elif self.middleButtonPressed:
+                # Calculate the direction of the drag
                 delta = event.pos() - self.lastDragPosition
-                self.parent.horizontalScrollBar().setValue(self.parent.horizontalScrollBar().value() - delta.x())
-                self.parent.verticalScrollBar().setValue(self.parent.verticalScrollBar().value() - delta.y())
-
-                # Update the position of the annotations by adding the delta
-                for stroke, _ in self.strokes:
-                    for point in stroke:
-                        point.setX(int(point.x() + delta.x()))
-                        point.setY(int(point.y() + delta.y()))
-
-                self.lastDragPosition = event.pos()
-            else:
-                self.lastDragPosition = event.pos()  # Track the initial position
-
-        elif self.zooming:
-            if self.lastDragPosition:
-                delta = event.pos() - self.lastDragPosition
-                zoomFactor = 1.0 + delta.x() / 100.0  # Adjust the factor as needed
+                if delta.x() < 0:
+                    zoomFactor = 0.95  # Zoom out
+                else:
+                    zoomFactor = 1.05  # Zoom in
 
                 # Calculate the center point for zooming (center of the widget)
                 center = self.parent.viewport().rect().center()
@@ -110,82 +149,50 @@ class PaintCanvas(QWidget):
                 # Set the new transformation matrix for the view
                 self.parent.setTransform(viewTransform)
 
-                # Calculate the center point for zooming (center of the widget)
-                center = self.parent.viewport().rect().center()
-
                 # Scale the annotations by the same factor
                 for stroke, _ in self.strokes:
                     for point in stroke:
-                        scaledX = int((point.x() - center.x()) * zoomFactor + center.x())
-                        scaledY = int((point.y() - center.y()) * zoomFactor + center.y())
-                        point.setX(scaledX)
-                        point.setY(scaledY)
+                        point.setX(int(point.x() * zoomFactor))
+                        point.setY(int(point.y() * zoomFactor))
 
                 self.lastDragPosition = event.pos()
             else:
-                self.lastDragPosition = event.pos()
-
-        elif self.middleButtonPressed:
-            # Calculate the direction of the drag
-            delta = event.pos() - self.lastDragPosition
-            if delta.x() < 0:
-                zoomFactor = 0.95  # Zoom out
-            else:
-                zoomFactor = 1.05  # Zoom in
-
-            # Calculate the center point for zooming (center of the widget)
-            center = self.parent.viewport().rect().center()
-            # Get the current transformation matrix for the view
-            viewTransform = self.parent.transform()
-            # Scale the view's transformation matrix
-            viewTransform.scale(zoomFactor, zoomFactor)
-            # Translate the view's transformation matrix to the center point
-            viewTransform.translate(center.x() * (1 - zoomFactor), center.y() * (1 - zoomFactor))
-            # Set the new transformation matrix for the view
-            self.parent.setTransform(viewTransform)
-
-            # Scale the annotations by the same factor
-            for stroke, _ in self.strokes:
-                for point in stroke:
-                    point.setX(int(point.x() * zoomFactor))
-                    point.setY(int(point.y() * zoomFactor))
-
-            self.lastDragPosition = event.pos()
-        else:
-            super().mouseMoveEvent(event)
+                super().mouseMoveEvent(event)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton and self.toolType == "Brush":
-            self.drawing = True
-            self.currentPoint = event.pos()
-            self.lastPoint = event.pos()
-            self.strokes.append(([], self.annotationsWindow.getPen()))  # Create a new QPen for this stroke
+        if self.active:
+            if event.button() == Qt.LeftButton and self.toolType == "Brush":
+                self.drawing = True
+                self.currentPoint = event.pos()
+                self.lastPoint = event.pos()
+                self.strokes.append(([], self.annotationsWindow.getPen()))  # Create a new QPen for this stroke
 
-        if event.button() == Qt.MiddleButton:
-            if self.altPressed:
-                self.zooming = True
-                self.lastDragPosition = event.pos()
+            if event.button() == Qt.MiddleButton:
+                if self.altPressed:
+                    self.zooming = True
+                    self.lastDragPosition = event.pos()
+                else:
+                    self.panning = True
+                    self.lastDragPosition = event.pos()
+                    self.setCursor(Qt.ClosedHandCursor)
             else:
-                self.panning = True
-                self.lastDragPosition = event.pos()
-                self.setCursor(Qt.ClosedHandCursor)
-        else:
-            super().mousePressEvent(event)
+                super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.drawing = False
-            self.lastPoint = None
+        if self.active:
+            if event.button() == Qt.LeftButton:
+                self.drawing = False
+                self.lastPoint = None
 
-        if event.button() == Qt.MiddleButton:
-            if self.altPressed:
-                self.zooming = False
+            if event.button() == Qt.MiddleButton:
+                if self.altPressed:
+                    self.zooming = False
+                else:
+                    self.panning = False
+                self.setCursor(Qt.ArrowCursor)
             else:
-                self.panning = False
-            self.setCursor(Qt.ArrowCursor)
-        else:
-            super().mouseReleaseEvent(event)
-        self.update()
+                super().mouseReleaseEvent(event)
+            self.update()
 
     def frameViewedItem(self):
         self.fitInView(self.viewedItem, Qt.KeepAspectRatio)
@@ -216,3 +223,9 @@ class PaintCanvas(QWidget):
         else:
             self.setFocusPolicy(Qt.NoFocus)
         super().setVisible(visible)
+    
+    def setActive(self, active):
+        if active:
+            self.active = True
+        else:
+            self.active = False
