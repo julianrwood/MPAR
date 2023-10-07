@@ -24,7 +24,8 @@ production
 + Add OIIO support (I need to work out how to build stuff directly into the project)
 + Additional colorspace support including viewing transforms and stuff like that
 + Exposure, gamma and saturation adjustments
-
++ Add a non-linear timeline, basically a premiere pro, davinci resolve, sony vegas or avid type editing timeline.
+  
 Utility
 + Contact sheets views
 + Sequence views
