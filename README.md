@@ -29,6 +29,8 @@ Utility
 + Contact sheets views
 + Sequence views
 + Annotations being saved directly onto the QGraphics objects that an Imageclass is linked to
++ It is important that we try to separate the underlying hardcode to any utility functionality that we might want to add. Creating
+      an MPAR Resources directory and having easily accessible exposure to all aspects of the underlying code would be good. I:e An API ( We want an API to allow anyone at any level            to easily add what they want without needing to understand the entire source code.
 
 System
 + Sync sessions for multiple people viewing (I want this to be something that's hosted on a users machine and then streamed to a connected user)
