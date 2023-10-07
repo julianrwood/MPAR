@@ -158,6 +158,9 @@ class MediaViewer(QMainWindow):
         """
         return self.view.getToolType()
 
+    def getImageViewer(self):
+        return self.view
+
 def main():
     app = QApplication(sys.argv)
     viewer = MediaViewer()

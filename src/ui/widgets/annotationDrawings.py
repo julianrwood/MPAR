@@ -227,5 +227,7 @@ class PaintCanvas(QWidget):
     def setActive(self, active):
         if active:
             self.active = True
+            self.setVisible(True)
         else:
             self.active = False
+            self.setVisible(False)

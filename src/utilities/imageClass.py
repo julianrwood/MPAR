@@ -8,7 +8,7 @@ import src.ui.widgets.annotationDrawings as annotationDrawings
 # Standard import of custom utilities
 import src.utilities.droppedItemValidation as MPARUtils_DIV
 import src.utilities.paintItem as MPARUtils_PI
-
+ 
 class SingleImageClass():
     """
     Pretty much anything that wants to be opened in the ImageViewer should come through here.
@@ -35,7 +35,7 @@ class SingleImageClass():
         self.graphicScene = QGraphicsScene()
 
         # Create an instance of PaintCanvas and its associated QGraphicsItem
-        self.annotationDrawings = annotationDrawings.PaintCanvas(self, self.MediaViewer.annotationDockWidget)
+        self.annotationDrawings = annotationDrawings.PaintCanvas(self.mediaViewer.getImageViewer(), self.mediaViewer.annotationDockWidget)
         self.annotationDrawingsItem = MPARUtils_PI.PaintCanvasItem(self.annotationDrawings)
         
         # Add the QGraphicsItem to the scene with a higher Z-value
@@ -124,5 +124,5 @@ class SingleImageClass():
     def getAnnoationDrawings(self):
         return self.annotationDrawings
     
-    def getannotationDrawingsItem(self):
+    def getAnnotationDrawingsItem(self):
         return self.annotationDrawingsItem

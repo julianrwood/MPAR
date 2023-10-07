@@ -154,19 +154,23 @@ class ImageView(QGraphicsView):
         self.sourcesWindow.addFileChild(imageClass)
 
     def setViewedItem(self, imageClass):
-        self.deactivateCurrentAnnotations()
+        print(imageClass)
+        self.deactivateAnnoations()
         self.viewedItem = imageClass
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
         self.frameViewedItem()
 
-    def deactivateAnnoations():
+    def deactivateAnnoations(self):
+        print('deactivated the annoation for this image')
         self.annotationDrawings.setActive(False)
         
     def setAnnotations(self, imageClass):
         self.annotationDrawings = imageClass.getAnnoationDrawings()
-        self.annotationDrawingsItem = imageClass.annotationDrawingsItem(self.annotationDrawings)
+        self.annotationDrawingsItem = imageClass.getAnnotationDrawingsItem()
         self.annotationDrawings.setActive(True)
+
+        print("Activated the annoation for this image")
 
     def frameViewedItem(self):
         self.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
