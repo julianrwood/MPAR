@@ -29,7 +29,7 @@ production
 Utility
 + Contact sheets views
 + Sequence views
-+ Annotations being saved directly onto the QGraphics objects that an Imageclass is linked to
++ Annotations being saved directly onto the QGraphics objects that an Imageclass is linked to - Done
 + It is important that we try to separate the underlying hardcode to any utility functionality that we might want to add. Creating
       an MPAR Resources directory and having easily accessible exposure to all aspects of the underlying code would be good. I:e An API ( We want an API to allow anyone at any level            to easily add what they want without needing to understand the entire source code.
 + Allow external DCC App Integration. (Basically can we call this program and have it launch in any software we like. ( This would make it useful for viewing image textures
