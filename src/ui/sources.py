@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSlider, QColorDialog, QLabel, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QSlider, QColorDialog, QLabel, QTreeWidget, QTreeWidgetItem, QMenu
 from PyQt5.QtGui import QPainter, QColor, QPen, QPainter, QPalette, QColor, QConicalGradient, QIcon
 from PyQt5.QtCore import Qt, QPointF, pyqtSignal, QVariant
 
@@ -20,6 +20,9 @@ class SourcesWidget(QWidget):
         self.tree_widget.setHeaderHidden(True)
         self.tree_widget.itemDoubleClicked.connect(self.childClicked)
 
+        self.tree_widget.setContextMenuPolicy(3)  # CustomContextMenu
+        self.tree_widget.customContextMenuRequested.connect(self.customContextMenu)
+
         self.populateTreeWidget()
 
         # Add opacity slider and buttons to the main layout
@@ -27,6 +30,26 @@ class SourcesWidget(QWidget):
 
         # Set the layout for the widget
         self.setLayout(layout)
+
+    def customContextMenu(self, point):
+        print('context requested')
+
+        index = self.tree_widget.indexAt(point)
+        if not index.isValid():
+            return
+        # Create the main context menu
+        menu = QMenu(self)
+
+        # Create the submenus and add them against the main context menu
+        viewablesSubmenu = QMenu("Viewables")
+        menu.addMenu(viewablesSubmenu)
+
+        actionCreateContactSheets = viewablesSubmenu.addAction("Create Contact Sheet viewable")
+        ationCreateSequenceViewable = viewablesSubmenu.addAction("Create Sequence viewable")
+
+        action = menu.exec_(self.tree_widget.viewport().mapToGlobal(point))
+
+        item = self.tree_widget.itemFromIndex(index)
 
     def populateTreeWidget(self):
         self.fileParent = QTreeWidgetItem(self.tree_widget, ['Files'])
