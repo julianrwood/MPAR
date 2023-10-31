@@ -78,7 +78,7 @@ class SingleImageClass():
 
         # Create a larger background rectangle
         # ToDo: make the bounding rectangle be triple the size of the loaded image
-        self.background = self.graphicScene.addRect(QRectF(0, 0, 16000, 16000), QPen(Qt.NoPen), QBrush(QColor("#2B2B2B")))
+        self.background = self.graphicScene.addRect(QRectF(0, 0, 128000, 128000), QPen(Qt.NoPen), QBrush(QColor("#2B2B2B")))
         
         # Calculate the center of the background rectangle
         backgroundCenter = self.background.sceneBoundingRect().center()

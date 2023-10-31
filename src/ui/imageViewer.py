@@ -30,7 +30,6 @@ class ImageView(QGraphicsView):
         # Create a QGraphicsScene to manage the items in the view
         self.scene = QGraphicsScene(self)
         self.setScene(self.scene)
-        
         # Create an instance of PaintCanvas and its associated QGraphicsItem
         # ToDo: These need to be associated with the relevent ImageClass. We 
         # can then reset them once we decide on which image we have loaded, 
@@ -154,23 +153,24 @@ class ImageView(QGraphicsView):
         self.sourcesWindow.addFileChild(imageClass)
 
     def setViewedItem(self, imageClass):
-        print(imageClass)
         self.deactivateAnnoations()
         self.viewedItem = imageClass
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
         self.frameViewedItem()
 
+        # Set the scroll bars to always show
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+
+
     def deactivateAnnoations(self):
-        print('deactivated the annoation for this image')
         self.annotationDrawings.setActive(False)
         
     def setAnnotations(self, imageClass):
         self.annotationDrawings = imageClass.getAnnoationDrawings()
         self.annotationDrawingsItem = imageClass.getAnnotationDrawingsItem()
         self.annotationDrawings.setActive(True)
-
-        print("Activated the annoation for this image")
 
     def frameViewedItem(self):
         self.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
