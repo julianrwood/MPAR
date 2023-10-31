@@ -9,7 +9,7 @@ class QTimeLine(QWidget):
         super().__init__(parent)
         self.duration = duration
         self.slider_position = 0
-        self.setMinimumHeight(25)
+        self.setMinimumHeight(40)
         self.setMaximumHeight(250)
 
         self.backgroundColor = QColor(60, 63, 65)
