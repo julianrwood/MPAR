@@ -9,6 +9,7 @@ MPAR: stands for Media Player And Review
 - qdarkgraystyle (This will get removed as I manually set the themes and stylesheets
 - imageio
 - numpy
+- k-lite
 
 # Look at the project
 It's currently a work in progress but this is what it's looking like so far. I will continue to expand and work on it as I go
