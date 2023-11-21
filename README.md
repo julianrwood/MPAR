@@ -9,6 +9,7 @@ MPAR: stands for Media Player And Review
 - qdarkgraystyle (This will get removed as I manually set the themes and stylesheets
 - imageio
 - numpy
+- k-lite
 
 # Look at the project
 It's currently a work in progress but this is what it's looking like so far. I will continue to expand and work on it as I go
@@ -19,8 +20,8 @@ It's currently a work in progress but this is what it's looking like so far. I w
 # List of ToDos
 production
 + Add exr support
-+ Mov, mp4 and other movie type support
-+ exr, tx, png and other image sequence support
++ Mov, mp4 and other movie type support - I have started this, the audio is playing however the video won't show in the main viewer
++ exr, tx, png and other image sequence support - exr support is partial, currently we just get weird firefly-looking stuff on the screen
 + Add OIIO support (I need to work out how to build stuff directly into the project)
 + Additional colorspace support including viewing transforms and stuff like that
 + Exposure, gamma and saturation adjustments
