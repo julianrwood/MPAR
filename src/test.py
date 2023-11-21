@@ -1,38 +1,43 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
-from PyQt5.QtGui import QPixmap, QImage
-import imageio
-import numpy as np
+import os
+from PyQt5 import QtCore, QtGui, QtWidgets, QtMultimedia, QtMultimediaWidgets
 
-class EXRViewer(QMainWindow):
-    def __init__(self, exr_filename):
-        super().__init__()
-        self.setWindowTitle("EXR Viewer")
+class Widget(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(Widget, self).__init__(parent)
 
-        # Load EXR Image
-        exr_data = imageio.imread(exr_filename)
-        q_img = self.numpy_array_to_qpixmap(exr_data)
+        self._scene = QtWidgets.QGraphicsScene()
+        self._gv = QtWidgets.QGraphicsView(self._scene)
 
-        # Create QLabel to display the image
-        label = QLabel()
-        label.setPixmap(q_img)
+        self._videoitem = QtMultimediaWidgets.QGraphicsVideoItem()
+        self._scene.addItem(self._videoitem)
 
-        # Set up the main layout
-        central_widget = QWidget()
-        layout = QVBoxLayout()
-        layout.addWidget(label)
-        central_widget.setLayout(layout)
-        self.setCentralWidget(central_widget)
+        self._player = QtMultimedia.QMediaPlayer(self, QtMultimedia.QMediaPlayer.VideoSurface)
+        self._player.stateChanged.connect(self.on_stateChanged)
+        self._player.setVideoOutput(self._videoitem)
 
-    def numpy_array_to_qpixmap(self, arr):
-        height, width, channel = arr.shape
-        bytes_per_line = 3 * width
-        q_img = QPixmap.fromImage(QImage(arr.data, width, height, bytes_per_line, QImage.Format_RGB888))
-        return q_img
+        self._player.setMedia(QtMultimedia.QMediaContent(QtCore.QUrl.fromLocalFile('C:/Users/Julian/Downloads/hotMilk_awfullEverAFter.mp4')))
+        button = QtWidgets.QPushButton("Play")
+        button.clicked.connect(self._player.play)
+
+        self.resize(640, 480)
+        lay = QtWidgets.QVBoxLayout(self)
+        lay.addWidget(self._gv)
+        lay.addWidget(button)
+
+    @QtCore.pyqtSlot(QtMultimedia.QMediaPlayer.State)
+    def on_stateChanged(self, state):
+        print('stateChanged')
+        if state == QtMultimedia.QMediaPlayer.PlayingState:
+            self._gv.fitInView(self._videoitem, QtCore.Qt.KeepAspectRatio)
+
+    def resizeEvent(self, event):
+        bounds = QtCore.QRectF(self._scene.sceneRect())
+        self._gv.fitInView(bounds, QtCore.Qt.KeepAspectRatio)
+        self._gv.centerOn(bounds.center())
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    exr_file_path = 'C:/Users/Julian/projects/hamish/blender/output/v001/room_1_v001_####.exr'
-    viewer = EXRViewer(exr_file_path)
-    viewer.show()
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    w = Widget()
+    w.show()
     sys.exit(app.exec_())

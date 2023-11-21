@@ -6,22 +6,26 @@ into their individual Pixmap frames to be loaded when the timeline is changed
 import os
 
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QPen, QImage
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+#from PyQt5.QtWidgets import QGraphicsVideoItem
 
 import imageio
 import numpy as np
 
+import src.utilities.viewClass as MPARUtils_SIC
 
-class pixMapConversion():
 
-    def __init__(self, filePath):
+class ItemDistributionAndValidation():
+
+    def __init__(self, filePath, mediaViewer):
+        self.mediaViewer = mediaViewer
         extension = self.extractExtension(filePath)
-        self.processExtension(extension, filePath)
+        imageClass = self.processExtension(extension, filePath)
 
     def extractExtension(self, filePath):
         if filePath:
             # Extract the file extension
             fileExtension = os.path.splitext(filePath)[-1].lower()
-
             return fileExtension
     
     def processExtension(self, fileExtension, filePath):
@@ -31,17 +35,27 @@ class pixMapConversion():
             # For example, you can use QPixmap for images
             pixmap = QPixmap(filePath)
             self.pixmap = pixmap
-            return pixmap
+            self.output = 'pixmap'
+            self.viewClass = MPARUtils_SIC.SingleImageClass(filePath, self.mediaViewer, self.pixmap)
+            return self.viewClass
 
+        if fileExtension in ['.mp4', '.mov', '.webm']:
+            self.output = 'video'
+            self.viewClass = MPARUtils_SIC.VideoClass(filePath, self.mediaViewer)
+            return self.viewClass
+        
         elif fileExtension in ['.exr']:
             pixmap = self.exrToPixmap(filePath)
             self.pixmap = pixmap
+            self.output = 'exr'
             return pixmap
-
         else:
-            # Handle the file using custom logic or display an error message
-            self.label.setText(f"Unsupported file format: {fileExtension}")
+            # This is basically an auto failure and isntant software crash at the moment
+            self.label.setText("Unsupported file format: "+fileExtension)
     
+    def getViewClass(self):
+        return self.viewClass
+        
     def exrToPixmap(self, exrImage):
         """
         This doesn't work and I don't know why, it just makes pixelated shit

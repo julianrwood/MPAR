@@ -1,6 +1,10 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem
+import os
+
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QGraphicsProxyWidget
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QPen
-from PyQt5.QtCore import Qt, QPoint, QRectF
+from PyQt5.QtCore import Qt, QPoint, QRectF, QTimer, QUrl, pyqtSlot
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget, QGraphicsVideoItem
 
 # Standard import of custom widgets
 import src.ui.widgets.annotationDrawings as annotationDrawings
@@ -16,7 +20,7 @@ class SingleImageClass():
     We will also support any filetype essentially through here. The validation will bounce the class if
     it detects a file type that we don't read.  
     """
-    def __init__(self, imagePath, mediaViewer):
+    def __init__(self, imagePath, mediaViewer, pixmap):
         """
         The init for the provided filepaths
         We first declare the global image path
@@ -24,14 +28,9 @@ class SingleImageClass():
         Then we add these to the QGraphics scene        
         """
         self.mediaViewer = mediaViewer
+        self.pixmap = pixmap
         self.filePath = imagePath
-        validatedImage = MPARUtils_DIV.pixMapConversion(self.filePath)
         
-        # Early return incase the validator does it job and fails
-        if validatedImage is None:
-            return None
-        
-        self.pixmap = validatedImage.getPixmap()
         self.graphicScene = QGraphicsScene()
 
         # Create an instance of PaintCanvas and its associated QGraphicsItem
@@ -44,6 +43,12 @@ class SingleImageClass():
 
         self.addPixmapToScene()
 
+    def getDisplayType(self):
+        """
+        An Attribute for knowing what kind of class we have
+        """
+        return 'SingleImage'
+    
     def getFilepath(self):
         """
         Returns the filepath of the imageClass
@@ -126,3 +131,93 @@ class SingleImageClass():
     
     def getAnnotationDrawingsItem(self):
         return self.annotationDrawingsItem
+
+    def frameItem(self, viewedItem, imageView):
+        imageView.fitInView(viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
+        imageView.centerOn(viewedItem.getPixmapItem())
+
+class VideoClass():
+    def __init__(self, videoPath, mediaViewer):
+
+        """
+        ToDo: Need to figure out why the video doesn't display, it just plays the audio
+        """
+        self.mediaViewer = mediaViewer
+        self.videoPath = videoPath
+
+        # Create a QGraphicsScene
+        self.graphicScene = QGraphicsScene()
+        self.graphicView = QGraphicsView(self.graphicScene)
+
+        # Create an instance of PaintCanvas and its associated QGraphicsItem
+        self.annotationDrawings = annotationDrawings.PaintCanvas(self.mediaViewer.getImageViewer(), self.mediaViewer.annotationDockWidget)
+        self.annotationDrawingsItem = MPARUtils_PI.PaintCanvasItem(self.annotationDrawings)
+        
+        # Add the QGraphicsItem to the scene with a higher Z-value
+        self.graphicScene.addItem(self.annotationDrawingsItem)
+        self.annotationDrawingsItem.setZValue(1)  # Set a higher Z-value to draw on top
+
+        # Create a QGraphicsVideoItem
+        self.videoItem = QGraphicsVideoItem()
+        self.graphicScene.addItem(self.videoItem)
+
+        # Create a QMediaPlayer and set the video output
+        self.player = QMediaPlayer(self.graphicScene, QMediaPlayer.VideoSurface)
+        self.player.setVideoOutput(self.videoItem)
+        #self.player.stateChanged.connect(self.stateChanged)
+        self.player.stateChanged.connect(self.stateChanged)
+
+        # Set up the media content
+        self.player.setMedia(QMediaContent(QUrl.fromLocalFile(self.videoPath)))
+
+        # Create a background rectangle
+        self.background = self.graphicScene.addRect(QRectF(0, 0, 128000, 128000), QPen(Qt.NoPen), QBrush(QColor("#2B2B2B")))
+
+        # Set the position of the video item to the center of the background
+        backgroundCenter = self.background.sceneBoundingRect().center()
+        #self.videoItem.setPos(backgroundCenter.x() - self.videoItem.boundingRect().width() / 2, backgroundCenter.y() - self.videoItem.boundingRect().height() / 2)
+        self.videoItem.setPos(backgroundCenter.x(), backgroundCenter.y())
+
+        print('width of video is: '+ str(self.videoItem.boundingRect().width()))
+
+        self.graphicScene.setSceneRect(self.graphicScene.itemsBoundingRect())
+
+    def stateChanged(self, state):
+        print('stateChanged')
+        if state == QMediaPlayer.PlayingState:
+            self.graphicView.fitInView(self.videoItem, Qt.KeepAspectRatio)
+
+    def getDisplayType(self):
+        return 'Video'
+
+    def getFilepath(self):
+        return self.videoPath
+
+    def getMediaPlayer(self):
+        return self.player
+
+    def getGraphicsScene(self):
+        return self.graphicScene
+
+    def getBackground(self):
+        return self.background
+
+    def play(self):
+        self.player.play()
+
+    def pause(self):
+        self.player.pause()
+
+    def stop(self):
+        self.player.stop()
+
+    def getAnnoationDrawings(self):
+        return self.annotationDrawings
+    
+    def getAnnotationDrawingsItem(self):
+        return self.annotationDrawingsItem
+    
+    def frameItem(self, viewedItem, imageView):
+        print('cant frame shit yet')
+        #imageView.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
+        #imageView.centerOn(self.viewedItem.getPixmapItem())

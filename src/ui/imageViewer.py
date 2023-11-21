@@ -6,8 +6,9 @@ from PyQt5.QtCore import Qt, QPoint, QRectF
 import src.ui.widgets.annotationDrawings as annotationDrawings
 
 # Importing self utility classes
-import src.utilities.imageClass as MPARUtils_SIC
+import src.utilities.viewClass as MPARUtils_SIC
 import src.utilities.paintItem as MPARUtils_PI
+import src.utilities.droppedItemValidation as MPARUtils_DIV
 
 class ImageView(QGraphicsView):
     def __init__(self, MediaViewer, sourcesWindow):
@@ -52,12 +53,11 @@ class ImageView(QGraphicsView):
     
     def dropEvent(self, event):
         for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-
-            selfImage = MPARUtils_SIC.SingleImageClass(file_path, self.MediaViewer)
+            filePath = url.toLocalFile()
+            returnedDisplayClass = MPARUtils_DIV.ItemDistributionAndValidation(filePath, self.MediaViewer).getViewClass()
 
             # Load the dropped image using the file_path
-            self.loadImage(selfImage)
+            self.loadImage(returnedDisplayClass)
 
     def wheelEvent(self, event):
         zoomInFactor = 1.25
@@ -155,14 +155,16 @@ class ImageView(QGraphicsView):
     def setViewedItem(self, imageClass):
         self.deactivateAnnoations()
         self.viewedItem = imageClass
+        print(imageClass)
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
         self.frameViewedItem()
+        self.update()
+        imageClass.play()
 
         # Set the scroll bars to always show
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-
 
     def deactivateAnnoations(self):
         self.annotationDrawings.setActive(False)
@@ -173,8 +175,7 @@ class ImageView(QGraphicsView):
         self.annotationDrawings.setActive(True)
 
     def frameViewedItem(self):
-        self.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
-        self.centerOn(self.viewedItem.getPixmapItem())
+        self.viewedItem.frameItem(self.viewedItem, self)
 
     def loadAndDisplayImage(self, file_path):
         pixmap = QPixmap(file_path)

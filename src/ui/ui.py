@@ -14,7 +14,7 @@ import src.ui.tools as tools
 import src.ui.timeline as timeline
 
 # Importing self utility classes
-import src.utilities.imageClass as SIC
+import src.utilities.viewClass as SIC
 
 class MediaViewer(QMainWindow):
     def __init__(self):
@@ -67,18 +67,6 @@ class MediaViewer(QMainWindow):
 
         self.toolsMenu.brushToolSelected.connect(self.enterAnnotationMode)
         self.toolsMenu.selectToolSelected.connect(self.enterSelectionMode)       
-
-    def dropEvent(self, event):
-        """
-        The event hook for if an item is dropped into the program. 
-        Mostly this Is just handled by the main imge viewer 
-        """
-        for url in event.mimeData().urls():
-            file_path = url.toLocalFile()
-            print("Dropped file path:", file_path)
-            # Load the dropped image using the file_path
-            selfImage = SIC(file_path)
-            self.view.loadImage(selfImage.getFilepath())
         
     def buildMenuBar(self):
         """
@@ -115,7 +103,6 @@ class MediaViewer(QMainWindow):
         # any call to create it is made. 
         """
         print('Docking annotations window')
-
 
     def openImage(self):
         """
