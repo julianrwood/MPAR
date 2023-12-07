@@ -1,8 +1,9 @@
 import os
+import cv2
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QGraphicsProxyWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QGraphicsRectItem, QGraphicsProxyWidget, QWidget
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QPen
-from PyQt5.QtCore import Qt, QPoint, QRectF, QTimer, QUrl, pyqtSlot
+from PyQt5.QtCore import Qt, QPoint, QRectF, QTimer, QUrl, pyqtSlot, pyqtSignal, QObject
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget, QGraphicsVideoItem
 
@@ -136,6 +137,9 @@ class SingleImageClass():
         imageView.fitInView(viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
         imageView.centerOn(viewedItem.getPixmapItem())
 
+    def getFrameCount(self):
+        return 1
+    
 class VideoClass():
     def __init__(self, videoPath, mediaViewer):
 
@@ -145,6 +149,9 @@ class VideoClass():
         self.mediaViewer = mediaViewer
         self.videoPath = videoPath
 
+        self.positionUpdateClass = positionUpdateClass()
+        self.metadata = self.videoMetaData()
+        
         # Create a QGraphicsScene
         self.graphicScene = QGraphicsScene()
 
@@ -164,6 +171,8 @@ class VideoClass():
         self.player = QMediaPlayer(self.graphicScene, QMediaPlayer.VideoSurface)
         self.player.setVideoOutput(self.videoItem)
         self.player.stateChanged.connect(self.stateChanged)
+        self.player.positionChanged.connect(self.positionChanging)
+        self.player.setNotifyInterval(50)
 
         # Set up the media content
         self.player.setMedia(QMediaContent(QUrl.fromLocalFile(self.videoPath)))
@@ -179,10 +188,33 @@ class VideoClass():
         self.graphicScene.setSceneRect(self.graphicScene.itemsBoundingRect())
 
     def stateChanged(self, state):
-        print('stateChanged')
         if state == QMediaPlayer.PlayingState:
-            print("Fitted to view")
+            print('')
             #self.graphicView.fitInView(self.videoItem, Qt.KeepAspectRatio)
+
+    def videoMetaData(self):
+        # Open the video file
+        cap = cv2.VideoCapture(self.videoPath)
+
+        # Check if the video file opened successfully
+        if not cap.isOpened():
+            print("Error: Could not open video file.")
+            return None
+
+        # Get video metadata
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # Release the video file
+        cap.release()
+        return {
+            "frame_count": frame_count,
+            "frame_rate": frame_rate,
+            "frame_width": frame_width,
+            "frame_height": frame_height
+        }
 
     def getDisplayType(self):
         return 'Video'
@@ -218,3 +250,20 @@ class VideoClass():
         print('cant frame shit yet')
         #imageView.fitInView(self.viewedItem.getPixmapItem(), Qt.KeepAspectRatio)
         #imageView.centerOn(self.viewedItem.getPixmapItem())
+    
+    def getFrameCount(self):
+        return int(self.metadata['frame_count'])
+    
+    def positionChanging(self, position):
+        #print((position/1000)*self.metadata['frame_rate'])
+        self.positionUpdateClass.updatePosition((position/1000)*self.metadata['frame_rate'])
+
+class positionUpdateClass(QObject):
+    changedPosition = pyqtSignal(int)
+
+    def __init__(self):
+        super().__init__()
+        self.position = 0
+
+    def updatePosition(self, position):
+        self.changedPosition.emit(int(position))

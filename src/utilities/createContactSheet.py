@@ -113,3 +113,6 @@ class CreateContactSheetViewable():
     
     def getPixmapItem(self):
         return self.pixmapItem
+    
+    def getDisplayType(self):
+        return 'contactSheet'

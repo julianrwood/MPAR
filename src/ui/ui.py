@@ -61,12 +61,20 @@ class MediaViewer(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.timelineDock)
 
         # Create an instance of ImageView
-        self.view = imageViewer.ImageView(self, self.sourcesDockWidget)
+        self.view = imageViewer.ImageView(self, self.sourcesDockWidget, self.timelineMenu)
         self.view.setAlignment(Qt.AlignCenter)
         self.setCentralWidget(self.view)
-
+        
+        self.initialiseSignals()
+        
+    def initialiseSignals(self):
+        # Tools menu signals
         self.toolsMenu.brushToolSelected.connect(self.enterAnnotationMode)
-        self.toolsMenu.selectToolSelected.connect(self.enterSelectionMode)       
+        self.toolsMenu.selectToolSelected.connect(self.enterSelectionMode)
+
+        # TimelineMenu signals
+        self.timelineMenu.playButtonPushed.connect(self.playButtonPushed)
+        self.timelineMenu.pauseButtonPushed.connect(self.pauseButtonPushed)
         
     def buildMenuBar(self):
         """
@@ -124,6 +132,16 @@ class MediaViewer(QMainWindow):
         """
         return self.view
 
+    def getToolMode(self):
+        """
+        We get our toolMode from theImageView as this is responsible for keeping track of 
+        which tool type we are in
+        """
+        return self.view.getToolType()
+
+    def getImageViewer(self):
+        return self.view
+
     @pyqtSlot()
     def enterAnnotationMode(self):
         """
@@ -138,15 +156,20 @@ class MediaViewer(QMainWindow):
         """
         self.view.setToolType('Select')
 
-    def getToolMode(self):
+    @pyqtSlot()
+    def playButtonPushed(self):
         """
-        We get our toolMode from theImageView as this is responsible for keeping track of 
-        which tool type we are in
+        Allows us to tell ImageView that we entered selectionMode
         """
-        return self.view.getToolType()
+        self.view.playCurrentMedia()
 
-    def getImageViewer(self):
-        return self.view
+    @pyqtSlot()
+    def pauseButtonPushed(self):
+        """
+        Allows us to tell ImageView that we entered selectionMode
+        """
+        self.view.pauseCurrentMedia()
+
 
 def main():
     app = QApplication(sys.argv)

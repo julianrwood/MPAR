@@ -1,6 +1,7 @@
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QColor, QPen
-from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QLabel
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QPainter, QColor, QPen, QIcon
+from PyQt5.QtWidgets import QWidget, QApplication, QHBoxLayout, QLabel, QPushButton
+
 
 class QTimeLine(QWidget):
     positionChanged = pyqtSignal(int)
@@ -73,13 +74,39 @@ class QTimeLine(QWidget):
         self.slider_position = x
         self.update()
 
+    def updateDuration(self, frameCount):
+        self.duration = frameCount
+        #self.paintEvent()
+
+
 class MainWindow(QWidget):
+    playButtonPushed = pyqtSignal()
+    pauseButtonPushed = pyqtSignal()
+
     def __init__(self):
         super().__init__()
         self.initUI()
 
     def initUI(self):
         self.setGeometry(100, 100, 800, 600)
+        selfLocation = __file__
+        iconLocation = selfLocation.replace('timeline.py','icons')
+        
+        self.pauseButton = QPushButton()
+        self.pauseButton.setIcon(QIcon(iconLocation+"/pauseButton.png"))
+        self.pauseButton.setMinimumHeight(40)
+        self.pauseButton.setMaximumHeight(40)
+        self.pauseButton.clicked.connect(self.emitPauseSignal)
+        self.pauseButton.setVisible(False)
+
+        self.playButton = QPushButton()
+        self.playButton.setIcon(QIcon(iconLocation+"/playButton.png"))
+        self.playButton.setMinimumHeight(40)
+        self.playButton.setMaximumHeight(40)
+        self.playButton.clicked.connect(self.emitPlaySignal)
+
+        # For some reason this needs to be set to false otherwise two versions of the button appear
+        self.pauseButton.setVisible(False)
 
         self.timeline = QTimeLine(50)
         self.timeline.positionChanged.connect(self.onPositionChanged)
@@ -89,6 +116,8 @@ class MainWindow(QWidget):
         self.current_frame_label.setMaximumWidth(30)
 
         layout = QHBoxLayout()  # Use QHBoxLayout
+        layout.addWidget(self.pauseButton)
+        layout.addWidget(self.playButton)
         layout.addWidget(self.timeline, stretch=1)
         layout.addWidget(self.current_frame_label, alignment=Qt.AlignRight)  # Align the label to the left
         self.setLayout(layout)
@@ -98,3 +127,21 @@ class MainWindow(QWidget):
 
     def setVisible(self, visible: bool) -> None:
         return super().setVisible(visible)
+    
+    def emitPlaySignal(self):
+        self.playButtonPushed.emit()
+        self.playButton.setVisible(False)
+        self.pauseButton.setVisible(True)
+
+    def emitPauseSignal(self):
+        self.pauseButtonPushed.emit()
+        self.playButton.setVisible(True)
+        self.pauseButton.setVisible(False)
+
+    def updateDuration(self, duration):
+        self.timeline.updateDuration(duration)
+
+    def updatePosition(self, position):
+        self.timeline.snapSlider(position)
+        self.current_frame_label.setText(str(position))
+    

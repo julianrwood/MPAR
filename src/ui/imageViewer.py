@@ -1,4 +1,6 @@
 import sys
+import logging
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsPixmapItem, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem
 from PyQt5.QtGui import QPixmap, QPainter, QColor, QBrush, QPen
 from PyQt5.QtCore import Qt, QPoint, QRectF
@@ -11,7 +13,7 @@ import src.utilities.paintItem as MPARUtils_PI
 import src.utilities.droppedItemValidation as MPARUtils_DIV
 
 class ImageView(QGraphicsView):
-    def __init__(self, MediaViewer, sourcesWindow):
+    def __init__(self, MediaViewer, sourcesWindow, timeline):
         super().__init__()
         self.setRenderHint(QPainter.SmoothPixmapTransform)
         self.setInteractive(True)
@@ -26,6 +28,7 @@ class ImageView(QGraphicsView):
 
         self.sourcesWindow = sourcesWindow
         self.MediaViewer = MediaViewer
+        self.timeline = timeline
         self.toolType = 'Select'  # Default tool is 'Select'
 
         # Create a QGraphicsScene to manage the items in the view
@@ -152,13 +155,14 @@ class ImageView(QGraphicsView):
     def setViewedItem(self, imageClass):
         self.deactivateAnnoations()
         self.viewedItem = imageClass
-        print(imageClass)
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
+        if imageClass.getDisplayType() is 'Video':
+            imageClass.positionUpdateClass.changedPosition.connect(self.updatePosition)
+
         self.frameViewedItem()
+        self.timeline.updateDuration(imageClass.getFrameCount())
         self.update()
-        # un comment the below line to get the autoplay with videos
-        #imageClass.play()
 
         # Set the scroll bars to always show
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
@@ -184,3 +188,21 @@ class ImageView(QGraphicsView):
         self.scene.addItem(pixmap_item)
         # Set the view to fit the image
         self.fitInView(pixmap_item, Qt.KeepAspectRatio)
+
+    #Interactions for the imageViewClass
+    def playCurrentMedia(self):
+        try:
+            self.viewedItem.play()
+        except AttributeError:
+            logging.info('imageViewer.py: No playable media loaded')
+        return
+    
+    def pauseCurrentMedia(self):
+        try:
+            self.viewedItem.pause()
+        except AttributeError:
+            logging.info('imageViewer.py: No playable media loaded')
+        return
+    
+    def updatePosition(self, position):
+        self.timeline.updatePosition(position)
