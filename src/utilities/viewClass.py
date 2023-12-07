@@ -147,7 +147,6 @@ class VideoClass():
 
         # Create a QGraphicsScene
         self.graphicScene = QGraphicsScene()
-        self.graphicView = QGraphicsView(self.graphicScene)
 
         # Create an instance of PaintCanvas and its associated QGraphicsItem
         self.annotationDrawings = annotationDrawings.PaintCanvas(self.mediaViewer.getImageViewer(), self.mediaViewer.annotationDockWidget)
@@ -164,28 +163,26 @@ class VideoClass():
         # Create a QMediaPlayer and set the video output
         self.player = QMediaPlayer(self.graphicScene, QMediaPlayer.VideoSurface)
         self.player.setVideoOutput(self.videoItem)
-        #self.player.stateChanged.connect(self.stateChanged)
         self.player.stateChanged.connect(self.stateChanged)
 
         # Set up the media content
         self.player.setMedia(QMediaContent(QUrl.fromLocalFile(self.videoPath)))
 
         # Create a background rectangle
-        self.background = self.graphicScene.addRect(QRectF(0, 0, 128000, 128000), QPen(Qt.NoPen), QBrush(QColor("#2B2B2B")))
+        self.background = self.graphicScene.addRect(QRectF(0, 0, 1920, 1280), QPen(Qt.NoPen), QBrush(QColor("#2B2B2B")))
 
         # Set the position of the video item to the center of the background
         backgroundCenter = self.background.sceneBoundingRect().center()
         #self.videoItem.setPos(backgroundCenter.x() - self.videoItem.boundingRect().width() / 2, backgroundCenter.y() - self.videoItem.boundingRect().height() / 2)
-        self.videoItem.setPos(backgroundCenter.x(), backgroundCenter.y())
-
-        print('width of video is: '+ str(self.videoItem.boundingRect().width()))
+        #self.videoItem.setPos(backgroundCenter.x(), backgroundCenter.y())
 
         self.graphicScene.setSceneRect(self.graphicScene.itemsBoundingRect())
 
     def stateChanged(self, state):
         print('stateChanged')
         if state == QMediaPlayer.PlayingState:
-            self.graphicView.fitInView(self.videoItem, Qt.KeepAspectRatio)
+            print("Fitted to view")
+            #self.graphicView.fitInView(self.videoItem, Qt.KeepAspectRatio)
 
     def getDisplayType(self):
         return 'Video'

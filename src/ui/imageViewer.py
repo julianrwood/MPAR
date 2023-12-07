@@ -44,9 +44,6 @@ class ImageView(QGraphicsView):
         
         self.setAcceptDrops(True)
 
-        self.scene = QGraphicsScene(self)
-        self.setScene(self.scene)
-
     def dragMoveEvent(self, event):
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
@@ -159,7 +156,7 @@ class ImageView(QGraphicsView):
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
         self.frameViewedItem()
-        self.update()
+        #self.update()
         imageClass.play()
 
         # Set the scroll bars to always show
