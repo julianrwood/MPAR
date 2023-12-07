@@ -156,8 +156,9 @@ class ImageView(QGraphicsView):
         self.setScene(imageClass.getGraphicsScene())
         self.setAnnotations(imageClass)
         self.frameViewedItem()
-        #self.update()
-        imageClass.play()
+        self.update()
+        # un comment the below line to get the autoplay with videos
+        #imageClass.play()
 
         # Set the scroll bars to always show
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
