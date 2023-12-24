@@ -6,10 +6,10 @@ MPAR: stands for Media Player And Review
 
 # Dependencies
 - Pyqt5
-- qdarkgraystyle (This will get removed as I manually set the themes and stylesheets
+- qdarkgraystyle (This will get removed as I manually set the themes and stylesheets)
 - imageio
 - numpy
-- k-lite
+- k-lite: Download from the k-lite website
 - opencv-python
   
 # Look at the project
