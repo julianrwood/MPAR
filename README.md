@@ -29,7 +29,7 @@ production
 + Add a non-linear timeline, basically a premiere pro, davinci resolve, sony vegas or avid type editing timeline.
   
 Utility
-+ Contact sheets views
++ Contact sheets views - Done for single images
 + Sequence views
 + Annotations being saved directly onto the QGraphics objects that an Imageclass is linked to - Done
 + It is important that we try to separate the underlying hardcode to any utility functionality that we might want to add. Creating
